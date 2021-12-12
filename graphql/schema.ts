@@ -9,9 +9,7 @@ import {
 import {join} from 'path';
 import {add, differenceInSeconds, max} from 'date-fns';
 import {Station as StationModel, Track as TrackModel} from '.prisma/client';
-import {PrismaClient} from '@prisma/client';
-
-const prisma = new PrismaClient({log: ['query', 'info']});
+import {prisma} from '../prisma/prisma-client';
 
 const Query = queryType({
   definition(t) {
