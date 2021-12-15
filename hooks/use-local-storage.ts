@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useCallback} from 'react';
 
 export default function useLocalStorage<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(initialValue);
@@ -16,7 +16,7 @@ export default function useLocalStorage<T>(key: string, initialValue: T) {
     setInitialized(true);
   }, []);
 
-  const setValue = (value: T | ((val: T) => T)) => {
+  const setValue = useCallback((value: T | ((val: T) => T)) => {
     try {
       const valueToStore =
         value instanceof Function ? value(storedValue) : value;
@@ -25,7 +25,7 @@ export default function useLocalStorage<T>(key: string, initialValue: T) {
     } catch (error) {
       console.log(error);
     }
-  };
+  }, []);
 
   return [storedValue, setValue, isInitialized] as const;
 }
