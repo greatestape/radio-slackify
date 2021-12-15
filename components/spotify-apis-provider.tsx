@@ -43,17 +43,18 @@ export default function SpotifyApisProvider({children}: Props) {
           },
         });
         _playbackApi.addListener('ready', ({device_id}) => {
-          console.log('The Web Playback SDK is ready to play music!');
+          // console.log('The Web Playback SDK is ready to play music!');
           // console.log('Device ID', device_id);
           setPlaybackApi(_playbackApi);
-          console.log('The Custom Web SDK is ready!');
+          // console.log('The Custom Web SDK is ready!');
           setCustomWebApi(new SpotifyCustomWebApi(token, device_id));
         });
         _playbackApi.connect().then((success) => {
-          if (success) {
-            console.log(
-              'The Web Playback SDK successfully connected to Spotify!',
-            );
+          if (!success) {
+            // console.log(
+            //   'The Web Playback SDK successfully connected to Spotify!',
+            // );
+            console.error('The Web Playback SDK failed to connect to Spotify!');
           }
         });
       });
@@ -61,7 +62,7 @@ export default function SpotifyApisProvider({children}: Props) {
     if (token && !webApi) {
       const _webApi = new SpotifyWebApi();
       _webApi.setAccessToken(token);
-      console.log('The Web SDK is ready!');
+      // console.log('The Web SDK is ready!');
       setWebApi(_webApi);
     }
   }, [token, playbackApi, webApi, isPlaybackApiInitializationStarted]);

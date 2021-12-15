@@ -3,10 +3,16 @@ import useLocalStorage from '../hooks/use-local-storage';
 import jwt from 'jsonwebtoken';
 import uniqid from 'uniqid';
 // import Layout from './app';
-import styles from '../styles/Home.module.css';
+import styles from './login.module.css';
 import {createSpotifyLoginUrl} from '../auth/spotify';
 
-export default function Login({redirectTo}: {redirectTo: string}) {
+export default function Login({
+  redirectTo,
+  warningMessage,
+}: {
+  redirectTo: string;
+  warningMessage?: string;
+}) {
   const [secret, setSecret, isSecretInitialized] = useLocalStorage(
     'spotify_token_state_secret',
     '',
@@ -25,16 +31,25 @@ export default function Login({redirectTo}: {redirectTo: string}) {
     }
   }, [secret, redirectTo, tokenState]);
 
-  if (tokenState)
-    return (
-      <div className={styles.container}>
-        <main className={styles.main}>
-          <a className={styles.SignIn} href={createSpotifyLoginUrl(tokenState)}>
-            Login to Spotify
-          </a>
-        </main>
-      </div>
-    );
-
-  return <p>Please wait...</p>;
+  return (
+    <div className={styles.container}>
+      <main className={styles.main}>
+        {tokenState ? (
+          <>
+            {warningMessage && (
+              <p className={styles.warning_message}>{warningMessage}</p>
+            )}
+            <a
+              className={styles.SignIn}
+              href={createSpotifyLoginUrl(tokenState)}
+            >
+              Login to Spotify
+            </a>
+          </>
+        ) : (
+          <p>Please wait...</p>
+        )}
+      </main>
+    </div>
+  );
 }
