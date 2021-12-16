@@ -1,4 +1,4 @@
-import {useQuery, gql} from '@apollo/client';
+import {useLazyQuery, gql} from '@apollo/client';
 import {NexusGenFieldTypes} from '../graphql/nexus';
 import {useState, useEffect} from 'react';
 import useSpotifyApis from '../hooks/use-spotify-apis';
@@ -23,15 +23,12 @@ const GET_PLAYBACK = gql`
 `;
 
 export default function StationPlayer({stationId}: {stationId: number}) {
-  const {loading, error, data, startPolling, stopPolling} = useQuery<Query>(
-    GET_PLAYBACK,
-    {
+  const [loadData, {loading, error, data, startPolling, stopPolling}] =
+    useLazyQuery<Query>(GET_PLAYBACK, {
       variables: {
         stationId,
       },
-      fetchPolicy: 'no-cache',
-    },
-  );
+    });
   const [stationPlayback, setStationPlayback] = useState<Playback | null>(null);
   const [spofityPlayback, setSpotifyPlayback] =
     useState<Spotify.PlaybackState | null>(null);
@@ -39,10 +36,19 @@ export default function StationPlayer({stationId}: {stationId: number}) {
   const {playbackApi, customWebApi} = useSpotifyApis();
 
   useEffect(() => {
-    startPolling(5000);
+    loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    if (startPolling) startPolling(2000);
   }, [startPolling]);
 
-  useEffect(() => () => stopPolling(), [stopPolling]);
+  useEffect(
+    () => () => {
+      if (stopPolling) stopPolling();
+    },
+    [stopPolling],
+  );
 
   useEffect(() => {
     // console.log('polling');
