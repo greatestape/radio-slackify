@@ -1,4 +1,4 @@
-import {useState, useEffect} from 'react';
+import {useState, useEffect, useCallback} from 'react';
 import styles from './search-box.module.css';
 import {useMutation, gql} from '@apollo/client';
 import {Track} from 'spotify-web-api-ts/types/types/SpotifyObjects';
@@ -8,35 +8,37 @@ import Image from 'next/image';
 export default function SearchBox({stationId}: {stationId: number}) {
   const [searchText, setSearchText] = useState('');
   const [isSearching, setSearching] = useState(false);
-  const [isVisible, setVisible] = useState(false);
+  const [isListVisible, setListVisible] = useState(false);
   const {webApi} = useSpotifyApis();
   const [tracks, setTracks] = useState([] as Track[]);
 
   useEffect(() => {
-    if (searchText.length > 2 && !isSearching && webApi) {
-      const search = async () => {
-        const result = await webApi.search.searchTracks(searchText, {
+    if (webApi && searchText.length > 2) {
+      let isUnmounted = false;
+      webApi.search
+        .searchTracks(searchText, {
           limit: 5,
+        })
+        .then((result) => {
+          if (!isUnmounted) setTracks(result.items);
         });
-        setTracks(result.items);
-        setSearching(false);
+      return () => {
+        isUnmounted = true;
       };
-      setSearching(true);
-      search();
     } else if (searchText.length <= 2) {
       setTracks([]);
     }
-  }, [searchText, isSearching, webApi]);
+  }, [searchText, webApi]);
 
   useEffect(() => {
-    const handler = (e: MouseEvent) => setVisible(false);
-    if (isVisible) {
+    const handler = (e: MouseEvent) => setListVisible(false);
+    if (isListVisible) {
       window.addEventListener('click', handler);
     } else {
       window.removeEventListener('click', handler);
     }
     return () => window.removeEventListener('click', handler);
-  }, [isVisible]);
+  }, [isListVisible]);
 
   return (
     <div
@@ -49,22 +51,20 @@ export default function SearchBox({stationId}: {stationId: number}) {
         className={styles.searchTextBox}
         onChange={(e) => setSearchText(e.currentTarget.value)}
         value={searchText}
-        onFocus={() => setVisible(true)}
+        onFocus={() => setListVisible(true)}
         // disabled={isSearching}
       />
-      {isVisible && (
+      {isListVisible && (
         <ul className={styles.pullDownList}>
-          {tracks.map((track) => {
-            return (
-              <li className={styles.pullDownListItem} key={track.uri}>
-                <TrackCard
-                  track={track}
-                  stationId={stationId}
-                  onAppendTrack={() => setVisible(false)}
-                />
-              </li>
-            );
-          })}
+          {tracks.map((track) => (
+            <li className={styles.pullDownListItem} key={track.uri}>
+              <TrackCard
+                track={track}
+                stationId={stationId}
+                onAppendTrack={() => setListVisible(false)}
+              />
+            </li>
+          ))}
         </ul>
       )}
     </div>
