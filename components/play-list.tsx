@@ -1,4 +1,4 @@
-import {useQuery, gql} from '@apollo/client';
+import {useLazyQuery, gql} from '@apollo/client';
 import {NexusGenFieldTypes, NexusGenObjects} from '../graphql/nexus';
 import {useState, useEffect} from 'react';
 import {format} from 'date-fns';
@@ -20,23 +20,29 @@ const GET_PLAY_LIST = gql`
 `;
 
 export default function PlayList({stationId}: {stationId: number}) {
-  const {loading, error, data, startPolling, stopPolling} = useQuery<Query>(
-    GET_PLAY_LIST,
-    {
+  const [loadData, {loading, error, data, startPolling, stopPolling}] =
+    useLazyQuery<Query>(GET_PLAY_LIST, {
       variables: {
         stationId,
         from: new Date('2021-08-01T13:33:18.688Z'),
       },
-      fetchPolicy: 'no-cache',
-    },
-  );
+    });
   const [list, setList] = useState<Track[]>([]);
 
   useEffect(() => {
-    startPolling(1000);
+    loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    if (startPolling) startPolling(2000);
   }, [startPolling]);
 
-  useEffect(() => () => stopPolling(), [stopPolling]);
+  useEffect(
+    () => () => {
+      if (stopPolling) stopPolling();
+    },
+    [stopPolling],
+  );
 
   useEffect(() => {
     if (data) {

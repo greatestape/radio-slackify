@@ -3,7 +3,7 @@ CREATE TABLE "Station" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
 
-    PRIMARY KEY ("id")
+    CONSTRAINT "Station_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -16,8 +16,8 @@ CREATE TABLE "Track" (
     "name" TEXT NOT NULL,
     "lengthInSeconds" INTEGER NOT NULL,
 
-    PRIMARY KEY ("id")
+    CONSTRAINT "Track_pkey" PRIMARY KEY ("id")
 );
 
 -- AddForeignKey
-ALTER TABLE "Track" ADD FOREIGN KEY ("stationId") REFERENCES "Station"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Track" ADD CONSTRAINT "Track_stationId_fkey" FOREIGN KEY ("stationId") REFERENCES "Station"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

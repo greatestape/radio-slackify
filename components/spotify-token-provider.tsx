@@ -24,8 +24,7 @@ export default function SpotifyTokenProvider({children}: Props) {
   const [expiry, setExpiry] = useLocalStorage('spotify_token_expiry', 0);
   const [secret] = useLocalStorage('spotify_token_state_secret', '');
   const [isTokenValid, setTokenValid] = useState(false);
-  const [tokenError, setTokenError] = useState('');
-  const [timeLeft, setTimeLeft] = useState(0);
+  const [errorMessage, setErrorMessage] = useState('');
   const router = useRouter();
 
   useEffect(() => {
@@ -42,7 +41,7 @@ export default function SpotifyTokenProvider({children}: Props) {
         router.replace(payload.redirectTo);
       } catch (error) {
         console.error(error);
-        setTokenError('Failed to get an access token.');
+        setErrorMessage('Failed to get a Spotify access token.');
       }
     }
   }, [router, secret, setToken, setExpiry]);
@@ -51,31 +50,26 @@ export default function SpotifyTokenProvider({children}: Props) {
     const timeLeft = expiry - Date.now();
     if (token && timeLeft > 0) {
       setTokenValid(true);
-      const timeout1 = setTimeout(() => {
+      const timeout = setTimeout(() => {
         setTokenValid(false);
+        setErrorMessage('The Spotify access token has expired.');
       }, timeLeft);
-      const timeout2 = setTimeout(() => {
-        setTimeLeft(timeLeft);
-      }, 1000);
       return () => {
-        clearTimeout(timeout1);
-        clearTimeout(timeout2);
+        clearTimeout(timeout);
       };
     }
-  }, [expiry, token, timeLeft]);
+  }, [expiry, token]);
 
   if (isTokenValid)
     return (
       <SpotifyTokenContext.Provider value={{token, expiry}}>
-        {/* <p>{Math.ceil(timeLeft / 1000)}</p> */}
         {children}
       </SpotifyTokenContext.Provider>
     );
   else
     return (
       <>
-        {/* {tokenError && <p>{tokenError}</p>} */}
-        <Login redirectTo={router.asPath} />
+        <Login redirectTo={router.asPath} warningMessage={errorMessage} />
       </>
     );
 }
